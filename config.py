@@ -5,6 +5,7 @@ load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
-
+DEBUG = False
 PAIR = "BTC/USD"
-TRADE_AMOUNT = 0.01
+LIVE_TRADING = False
+TRADE_AMOUNT = 0.001
