@@ -1,0 +1,13 @@
+# Hide secrets
+.env
+
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS / IDE files
+.vs/
+*.log
