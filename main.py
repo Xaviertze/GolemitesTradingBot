@@ -1,7 +1,7 @@
 ﻿# main.py
 import time
 from api import *
-from strategy import simple_strategy
+from strategy import *
 from config import PAIR
 from logger import init_log, log_trade
 
@@ -15,8 +15,8 @@ def run_bot():
             price = data["Data"][PAIR]["LastPrice"]
             print(f"Price: {price}")
 
-            action = simple_strategy(price)
-            print(f"Action: {action}")
+            action, size = yow_strategy(price)
+            print(f"Action: {action}, Size: {size:.6f}")
 
             #  EXECUTE TRADE
             if action == "BUY" and last_action != "BUY":
@@ -110,3 +110,4 @@ def test_trade():
 if __name__ == "__main__":
     init_log()
     run_bot()
+    
