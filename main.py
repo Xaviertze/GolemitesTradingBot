@@ -236,7 +236,6 @@ def run_bot():
 
 
 if __name__ == "__main__":
-
     init_logs()
     load_prices_from_csv()
     all_pairs = get_all_pairs()
