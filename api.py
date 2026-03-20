@@ -29,9 +29,12 @@ def _get_signed_headers(payload: dict):
 
     return headers, payload
 
-def get_ticker(pair):
+def get_ticker(pair=None):
     url = f"{BASE_URL}/v3/ticker"
-    params = {'timestamp': _get_timestamp(), 'pair': pair}
+    params = {'timestamp': _get_timestamp()}
+
+    if pair:
+        params['pair'] = pair
 
     try:
         res = requests.get(url, params=params)
@@ -100,3 +103,14 @@ def place_order(pair_or_coin, side, quantity, price=None, order_type=None):
     except Exception as e:
         print("Error placing order:", e)
         return None
+    
+def get_all_pairs():
+    url = f"{BASE_URL}/v3/exchangeInfo"
+
+    try:
+        res = requests.get(url)
+        data = res.json()
+        return list(data["TradePairs"].keys())
+    except Exception as e:
+        print("Error getting pairs:", e)
+        return []

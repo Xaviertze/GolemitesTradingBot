@@ -69,7 +69,7 @@ def simple_strategy2(current_price):
 
     return "HOLD"
 
-'''
+
 
 import statistics
 import csv
@@ -195,3 +195,113 @@ def yow_strategy(current_price):
         return "SELL", position_size
 
     return "HOLD", 0
+'''
+
+# Test new strategy
+import statistics
+import csv
+state = {}
+EXPECTED_RETURN = 0.004
+ABSSIGNAL = 0.6
+def load_prices_from_csv(filename="price_log.csv"):
+    from pair_selector import pair_history
+
+    try:
+        with open(filename, "r") as f:
+            reader = csv.reader(f)
+            next(reader)  # skip header
+
+            for row in reader:
+                pair = row[1]
+                price = float(row[2])
+
+                # ✅ update pair_selector memory
+                if pair not in pair_history:
+                    pair_history[pair] = []
+                pair_history[pair].append(price)
+                pair_history[pair] = pair_history[pair][-50:]
+
+                # ✅ update strategy memory
+                init_pair(pair)
+                state[pair]["prices"].append(price)
+                state[pair]["prices"] = state[pair]["prices"][-50:]
+
+        print("CSV data loaded into strategy")
+
+    except FileNotFoundError:
+        print("No price_log.csv found")
+
+def init_pair(pair):
+    if pair not in state:
+        state[pair] = {
+            "pnl":0,
+            "prices": [],
+            "position": 0,
+            "entry_price": None
+        }
+
+def yow_strategy(pair, current_price):
+    init_pair(pair)
+
+    s = state[pair]
+    s["prices"].append(current_price)
+
+    if len(s["prices"]) < 50:
+        return "HOLD", 0
+
+    prices = s["prices"]
+
+    ma10 = sum(prices[-10:]) / 10
+    ma50 = sum(prices[-50:]) / 50
+    ma20 = sum(prices[-20:]) / 20
+    vol = statistics.stdev(prices[-20:])
+
+    trend = 1 if ma10 > ma50 else -1
+
+    z = (current_price - ma20) / vol if vol != 0 else 0
+
+    if z < -2:
+        mr = 1
+    elif z > 2:
+        mr = -1
+    else:
+        mr = 0
+
+    # Regime
+    if vol > ma20 * 0.002:
+        regime = "volatile"
+    elif abs(ma10 - ma50) / ma50 > 0.001:
+        regime = "trending"
+    else:
+        regime = "sideways"
+
+    # Combine
+    if regime == "trending":
+        signal = 0.7 * trend + 0.3 * mr
+    elif regime == "sideways":
+        signal = 0.3 * trend + 0.7 * mr
+    else:
+        signal = 0
+
+    expected_return = abs(signal) * vol
+
+    if expected_return < EXPECTED_RETURN:
+        signal = 0
+
+    if abs(signal) < ABSSIGNAL:
+        signal = 0
+
+    # Decision
+    if signal > 0 and s["position"] == 0:
+        s["position"] = 1
+        s["entry_price"] = current_price
+        return "BUY", 0.001
+
+    elif signal < 0 and s["position"] == 1:
+        s["position"] = 0
+        pnl = current_price - s["entry_price"]
+        s["pnl"] += pnl
+        print(f"{pair} PnL: {s['pnl']:.4f}")
+        return "SELL", 0.001
+
+    return ("HOLD", 0)
