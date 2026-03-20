@@ -7,5 +7,5 @@ API_KEY = os.getenv("API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = False
 PAIR = "BTC/USD"
-LIVE_TRADING = False
+LIVE_TRADING = True
 TRADE_AMOUNT = 0.001

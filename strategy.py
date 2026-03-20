@@ -72,6 +72,7 @@ def simple_strategy2(current_price):
 '''
 
 import statistics
+import csv
 
 prices = []
 position = 0        # 1 = long, -1 = short (we only use 1 / 0 here)
@@ -80,6 +81,23 @@ equity_peak = 0
 equity = 100000     # simulated equity (you can improve later)
 
 k = 0.001  # position sizing constant
+
+def load_prices_from_csv(filename="price_log.csv"):
+    global prices
+
+    try:
+        with open(filename, mode="r") as file:
+            reader = csv.reader(file)
+            next(reader)  # skip header
+
+            for row in reader:
+                price = float(row[2])  # 3rd column = price
+                prices.append(price)
+
+        print(f"Loaded {len(prices)} historical prices")
+
+    except FileNotFoundError:
+        print("No price_log.csv found, starting fresh")
 
 
 def moving_average(data, window):

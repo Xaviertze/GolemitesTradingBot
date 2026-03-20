@@ -30,3 +30,8 @@ def log_trade(action, pair, price, quantity, order_id, status):
             order_id,
             status
         ])
+        
+def log_price(pair, price):
+    with open("price_log.csv", mode="a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([datetime.now(), pair, price])

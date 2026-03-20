@@ -3,7 +3,7 @@ import time
 from api import *
 from strategy import *
 from config import PAIR
-from logger import init_log, log_trade
+from logger import *
 
 def run_bot():
     last_action = None  # prevent repeated trades
@@ -13,6 +13,7 @@ def run_bot():
 
         if data and data["Success"]:
             price = data["Data"][PAIR]["LastPrice"]
+            log_price(PAIR,price)
             print(f"Price: {price}")
 
             action, size = yow_strategy(price)
@@ -108,6 +109,9 @@ def test_trade():
     print(result)
 
 if __name__ == "__main__":
+    '''
     init_log()
+    load_prices_from_csv()
     run_bot()
-    
+    '''
+    test_balance()
