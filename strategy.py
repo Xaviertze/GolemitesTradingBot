@@ -201,7 +201,7 @@ def yow_strategy(current_price):
 import statistics
 import csv
 state = {}
-EXPECTED_RETURN = 0.004
+EXPECTED_RETURN = 0.006
 ABSSIGNAL = 0.6
 def load_prices_from_csv(filename="price_log.csv"):
     from pair_selector import pair_history
@@ -257,9 +257,29 @@ def yow_strategy(pair, current_price):
     ma20 = sum(prices[-20:]) / 20
     vol = statistics.stdev(prices[-20:])
 
-    trend = 1 if ma10 > ma50 else -1
+    trend_strength = (ma10 - ma50) / ma50
+
+    if trend_strength > 0.002:
+        trend = 1
+    elif trend_strength < -0.002:
+        trend = -1
+    else:
+        trend = 0
 
     z = (current_price - ma20) / vol if vol != 0 else 0
+
+    if s["position"] == 1 and s["entry_price"] is not None:
+        change = (current_price - s["entry_price"]) / s["entry_price"]
+
+        # STOP LOSS
+        if change < -0.02:
+            print(f"{pair} STOP LOSS triggered")
+            return "SELL", s["quantity"]
+
+        # TAKE PROFIT
+        if change > 0.03:
+            print(f"{pair} TAKE PROFIT triggered")
+            return "SELL", s["quantity"]
 
     if z < -2:
         mr = 1
@@ -293,7 +313,8 @@ def yow_strategy(pair, current_price):
         signal = 0
 
     # Decision
-    if signal > 0 and s["position"] == 0:
+    # only buy if not overextended
+    if signal > 0 and s["position"] == 0 and z < 1:
         s["position"] = 1
         s["entry_price"] = current_price
         return "BUY", 0.01
