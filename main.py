@@ -204,6 +204,7 @@ def run_bot():
 
                             # ✅ STORE ACTUAL FILLED QUANTITY
                             state[pair]["quantity"] = order["Quantity"]
+                            state[pair]["entry_price"] = order["Price"]
                         else:
                             print("BUY failed:", result)
 
@@ -253,5 +254,4 @@ if __name__ == "__main__":
     portfolio.load_positions_from_wallet()
     all_pairs = get_all_pairs()
     selected_pairs = all_pairs[:3]  # initial fallback
-    
     run_bot()

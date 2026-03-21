@@ -3,8 +3,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_KEY = os.getenv("API_KEY")
-SECRET_KEY = os.getenv("SECRET_KEY")
+#PI_KEY =K3Ch90FPThWIgGRyYp4wNKgEn3RAMBgN4CTRPMSfU1Hkt4lKUBOfLbdDy03JWBSe
+#ECRET_KEY =eEKJ6JKLGBGjJPT8ksYSYye8KulH8Ahg1QJpW2v1oVljlluflhynI5vNIuOurBFT
+
+API_KEY ="ZSSU2ehB05QkbwXJne094dSTwIh7alc0twTJtycpzK9id9eCixyKikVgRFQlHHjz"
+SECRET_KEY="nY9BTAzct8jcEMB27ViDgYqqBhowgmeBCafXHa2zibooDoYFtrLwJpV6HbXg844f"
 DEBUG = False
 PAIR = "BTC/USD"
 LIVE_TRADING = True

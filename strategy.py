@@ -296,17 +296,23 @@ def yow_strategy(pair, current_price):
     if signal > 0 and s["position"] == 0:
         s["position"] = 1
         s["entry_price"] = current_price
-        return "BUY", None
+        return "BUY", 0.01
 
     elif signal < 0 and s["position"] == 1:
-        s["position"] = 0
-        pnl = current_price - s["entry_price"]
-        s["pnl"] += pnl
-        print(f"{pair} PnL: {s['pnl']:.4f}")
         qty = s["quantity"]
+
+        if s["entry_price"] is not None:
+            pnl = current_price - s["entry_price"]
+            s["pnl"] += pnl
+            print(f"{pair} PnL: {s['pnl']:.4f}")
+        else:
+            print(f"{pair} entry_price unknown — skipping PnL calc")
+
         s["position"] = 0
         s["quantity"] = 0
+        s["entry_price"] = None
 
         return "SELL", qty
+    
 
     return ("HOLD", 0)

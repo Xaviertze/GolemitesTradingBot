@@ -13,5 +13,3 @@ venv/
 *.pyproj
 
 # Logs
-*.log
-*.csv
