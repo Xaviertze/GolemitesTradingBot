@@ -1,5 +1,6 @@
 import statistics
 from api import get_balance
+from strategy import state, init_pair
 import time
 
 _last_balance = 0
@@ -26,7 +27,7 @@ def get_total_capital():
         print("Balance API failed:", data)
         return 0
 
-    wallet = data.get("Wallet", {})
+    wallet = data.get("SpotWallet", {})
 
     usd = wallet.get("USD", {})
 
@@ -76,28 +77,42 @@ def normalize_sizes(pairs, state):
 
     return sizes
 
+def adjust_quantity(pair, quantity, pair_rules):
+    precision = pair_rules[pair]["AmountPrecision"]
 
-def allocate_trade_size(pair, weights, price):
+    factor = 10 ** precision
+
+    # 🔥 floor but NEVER drop to zero if valid
+    adjusted = int(quantity * factor) / factor
+
+    # 🚨 if becomes zero → force minimum step
+    if adjusted == 0:
+        adjusted = 1 / factor
+
+    return adjusted
+
+def allocate_trade_size(pair, weights, price, pair_rules):
     capital = get_total_capital_cached()
-
-    if capital == 0:
+    if capital == 0 or pair not in weights:
         return 0
-
-    drawdown = get_drawdown(capital)
-
-    # 🔥 risk control
-    if drawdown > 0.12:
-        return 0  # STOP trading
 
     allocation = capital * weights[pair]
 
-    # reduce size if losing
-    if drawdown > 0.08:
-        allocation *= 0.5
+    # 🔥 ensure minimum allocation FIRST
+    if allocation < 1:
+        allocation = 1
 
     quantity = allocation / price
 
-    return min(round(quantity, 6), 0.01)
+    quantity = adjust_quantity(pair, quantity, pair_rules)
+
+    # 🔥 FINAL SAFETY CHECK
+    if quantity * price < 1:
+        quantity = (1 / price)
+        quantity = adjust_quantity(pair, quantity, pair_rules)
+    return quantity
+
+    
 
 
 def update_returns(current_equity):
@@ -130,3 +145,30 @@ def get_drawdown(current_equity):
     drawdown = (peak_equity - current_equity) / peak_equity if peak_equity > 0 else 0
 
     return drawdown
+
+
+
+def load_positions_from_wallet():
+    data = get_balance()
+
+    if not data or not data.get("Success"):
+        print("Failed to load wallet")
+        return
+
+    wallet = data.get("SpotWallet", {})
+
+    for asset, info in wallet.items():
+        if asset == "USD":
+            continue
+
+        quantity = info.get("Free", 0)
+
+        if quantity > 0:
+            pair = f"{asset}/USD"
+
+            init_pair(pair)
+
+            state[pair]["position"] = 1
+            state[pair]["quantity"] = quantity
+
+            print(f"Loaded position: {pair} → {quantity}")

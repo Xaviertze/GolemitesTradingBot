@@ -114,3 +114,7 @@ def get_all_pairs():
     except Exception as e:
         print("Error getting pairs:", e)
         return []
+
+def get_exchange_info():
+    url = f"{BASE_URL}/v3/exchangeInfo"
+    return requests.get(url).json()

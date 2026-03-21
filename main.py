@@ -122,10 +122,10 @@ if __name__ == "__main__":
 import time
 from api import *
 from strategy import *
-from pair_selector import *
+import pair_selector
 from config import *
 from logger import *
-from portfolio import *
+import portfolio
 
 all_pairs = []
 selected_pairs = []
@@ -139,8 +139,8 @@ def run_bot():
     data_counter = 0
 
     while True:
-        capital = get_total_capital_cached()
-        update_returns(capital)
+        capital = portfolio.get_total_capital_cached()
+        portfolio.update_returns(capital)
         counter += 1
 
         if data_counter % 4 == 0:
@@ -152,14 +152,14 @@ def run_bot():
                 for pair, info in data["Data"].items():
                     price = info["LastPrice"]
 
-                    update_pair_history(pair, price)
+                    pair_selector.update_pair_history(pair, price)
                     log_price(pair, price)
 
         data_counter += 1
 
         # 🔄 Update pair selection every ~1 minute
         if counter % 4 == 0:
-            new_pairs = select_top_pairs(all_pairs,top_n=3)
+            new_pairs = pair_selector.select_top_pairs(all_pairs,top_n=3)
 
             if set(new_pairs) != set(selected_pairs):
                 last_selected_pairs = selected_pairs
@@ -168,7 +168,7 @@ def run_bot():
         if not selected_pairs:
             continue
         else:
-            weights = normalize_sizes(selected_pairs,state)
+            weights = portfolio.normalize_sizes(selected_pairs,state)
 
         for pair in selected_pairs:
             data = get_ticker(pair)
@@ -176,17 +176,19 @@ def run_bot():
             if data and data["Success"]:
                 price = data["Data"][pair]["LastPrice"]
 
-                update_pair_history(pair, price)
+                pair_selector.update_pair_history(pair, price)
 
-                action,_  = yow_strategy(pair, price)
-                size = allocate_trade_size(pair,weights,price)
-
+                action, strat_size = yow_strategy(pair, price)
+                    
                 print(f"{pair} | Price: {price} | Action: {action}")
-
+                
                 if action == "BUY":
+                    size = portfolio.allocate_trade_size(pair, weights, price, pair_rules)
+                    if size <= 0 or size * price < 1:
+                            print(f"Skipping {action} {pair} — invalid size")
+                            continue
                     if LIVE_TRADING:
                         result = place_order(pair, "BUY", size)
-
                         if result and result.get("Success"):
                             order = result["OrderDetail"]
 
@@ -199,6 +201,9 @@ def run_bot():
                                 order_id=order["OrderID"],
                                 status=order["Status"]
                             )
+
+                            # ✅ STORE ACTUAL FILLED QUANTITY
+                            state[pair]["quantity"] = order["Quantity"]
                         else:
                             print("BUY failed:", result)
 
@@ -208,6 +213,11 @@ def run_bot():
                         log_trade(pair, "BUY", price, size)
 
                 elif action == "SELL":
+                    size = strat_size
+                    if size <= 0 or size * price < 1:
+                            print(f"Skipping {action} {pair} — invalid size")
+                            continue
+                    
                     if LIVE_TRADING:
                         result = place_order(pair, "SELL", size)
 
@@ -237,7 +247,10 @@ def run_bot():
 
 if __name__ == "__main__":
     init_logs()
+    exchange_info = get_exchange_info()
+    pair_rules = exchange_info["TradePairs"]
     load_prices_from_csv()
+    portfolio.load_positions_from_wallet()
     all_pairs = get_all_pairs()
     selected_pairs = all_pairs[:3]  # initial fallback
     

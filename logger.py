@@ -18,7 +18,7 @@ def init_logs():
     if not os.path.exists(TRADE_FILE):
         with open(TRADE_FILE, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["timestamp", "pair", "action", "price", "quantity", "mode", "order_id", "status"])
+            writer.writerow(["timestamp", "action", "pair", "price", "quantity", "mode", "order_id", "status"])
 
 
 # ✅ LOG PRICE
@@ -37,8 +37,8 @@ def log_trade(pair, action, price, quantity, mode="SIM", order_id="SIMULATED", s
         writer = csv.writer(f)
         writer.writerow([
             datetime.now(),
-            pair,
             action,
+            pair,
             price,
             quantity,
             mode,
