@@ -170,6 +170,7 @@ def run_bot():
         else:
             weights = portfolio.normalize_sizes(selected_pairs,state)
 
+        
         for pair in selected_pairs:
             data = get_ticker(pair)
 

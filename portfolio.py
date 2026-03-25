@@ -175,7 +175,7 @@ def load_positions_from_wallet():
             print(f"Loaded position: {pair} → {quantity}")
 
 
-def liquidate_banned_assets():
+def liquidate_banned_assets(price):
     data = get_balance()
 
     if not data or not data.get("Success"):
@@ -193,9 +193,11 @@ def liquidate_banned_assets():
 
             if free_amount > 0:
                 pair = f"{coin}/USD"
-
                 print(f"🚨 Liquidating {coin}: {free_amount}")
-
-                result = place_order(pair, "SELL", free_amount)
+                
+                if LIVE_TRADING:
+                    result = place_order(pair, "SELL", free_amount)
+                else :
+                    print("Not Trading")
 
                 print("Liquidation result:", result)
