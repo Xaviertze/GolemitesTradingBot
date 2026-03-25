@@ -1,6 +1,7 @@
 import statistics
-from api import get_balance
+from api import get_balance, place_order
 from strategy import state, init_pair
+from config import *
 import time
 
 _last_balance = 0
@@ -172,3 +173,29 @@ def load_positions_from_wallet():
             state[pair]["quantity"] = quantity
 
             print(f"Loaded position: {pair} → {quantity}")
+
+
+def liquidate_banned_assets():
+    data = get_balance()
+
+    if not data or not data.get("Success"):
+        print("Failed to fetch balance for liquidation")
+        return
+
+    wallet = data.get("SpotWallet", {})   # ✅ IMPORTANT FIX (you had Wallet before)
+
+    for coin, info in wallet.items():
+        if coin == "USD":
+            continue
+
+        if coin in BANNED_COINS:
+            free_amount = info.get("Free", 0)
+
+            if free_amount > 0:
+                pair = f"{coin}/USD"
+
+                print(f"🚨 Liquidating {coin}: {free_amount}")
+
+                result = place_order(pair, "SELL", free_amount)
+
+                print("Liquidation result:", result)

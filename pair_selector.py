@@ -1,4 +1,5 @@
 import statistics
+from config import *
 
 pair_history = {}
 
@@ -29,9 +30,17 @@ def select_top_pairs(all_pairs, top_n=3):
     scores = []
 
     for pair in all_pairs:
+        coin = pair.split("/")[0]
+        if coin in BANNED_COINS or pair in BANNED_PAIRS:
+            continue
         score = score_pair(pair)
         scores.append((pair, score))
 
     scores.sort(key=lambda x: x[1], reverse=True)
 
     return [p for p, _ in scores[:top_n]]
+
+
+    
+
+    

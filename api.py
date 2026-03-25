@@ -103,17 +103,34 @@ def place_order(pair_or_coin, side, quantity, price=None, order_type=None):
     except Exception as e:
         print("Error placing order:", e)
         return None
-    
+
+
 def get_all_pairs():
     url = f"{BASE_URL}/v3/exchangeInfo"
 
     try:
         res = requests.get(url)
         data = res.json()
-        return list(data["TradePairs"].keys())
+
+        pairs = list(data["TradePairs"].keys())
+
+        filtered = []
+        for p in pairs:
+            coin = p.split("/")[0]
+
+            if coin in BANNED_COINS:
+                continue
+            if p in BANNED_PAIRS:
+                continue
+
+            filtered.append(p)
+
+        return filtered
+
     except Exception as e:
         print("Error getting pairs:", e)
         return []
+
 
 def get_exchange_info():
     url = f"{BASE_URL}/v3/exchangeInfo"

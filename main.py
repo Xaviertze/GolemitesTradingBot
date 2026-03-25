@@ -248,6 +248,7 @@ def run_bot():
 
 if __name__ == "__main__":
     init_logs()
+    #portfolio.liquidate_banned_assets()
     exchange_info = get_exchange_info()
     pair_rules = exchange_info["TradePairs"]
     load_prices_from_csv()
@@ -255,3 +256,4 @@ if __name__ == "__main__":
     all_pairs = get_all_pairs()
     selected_pairs = all_pairs[:3]  # initial fallback
     run_bot()
+    
