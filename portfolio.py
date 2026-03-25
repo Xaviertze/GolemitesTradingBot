@@ -175,7 +175,7 @@ def load_positions_from_wallet():
             print(f"Loaded position: {pair} → {quantity}")
 
 
-def liquidate_banned_assets(price):
+def liquidate_banned_assets():
     data = get_balance()
 
     if not data or not data.get("Success"):
